@@ -1,0 +1,124 @@
+//Write your controller (JS code) code here
+//Focus here and F11 to full screen editor
+
+//This function will be called once to init components
+vm.initLiveComponent = function () {
+
+    // Crear el visor del mapa con OpenLayers
+    let viewer = new ol.Map({
+        target: 'openLayersContainer',
+        layers: [
+            // Capa base PNOA WMS en EPSG:25830
+            new ol.layer.Tile({
+                source: new ol.source.TileWMS({
+                    url: 'https://www.ign.es/wms-inspire/pnoa-ma',
+                    params: {
+                        'LAYERS': 'PNOA',  // Capa PNOA
+                        'TILED': true       // Habilitar la carga de mosaicos
+                    },
+                    serverType: 'geoserver',
+                    transition: 0
+                })
+            })
+        ],
+        view: new ol.View({
+            projection: 'EPSG:25830', // Usar la proyección ETRS89 / UTM 30N
+            center: ol.proj.fromLonLat([-3.7038, 40.4168], 'EPSG:25830'), // Centrado en España (Madrid, ajusta las coordenadas si es necesario)
+            zoom: 6  // Ajuste del nivel de zoom
+        })
+    });
+
+    setTimeout(function () {
+        viewer.updateSize();
+    }, 100);
+
+    // Agregar los puntos de ejemplo si es necesario (comentado, ya que no se está mostrando en el mapa)
+    const myJSON = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": "Work"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        -3.641436696052551,
+                        40.529066557739924
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": "Lunch"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        -3.6394304037094116,
+                        40.53058739857294
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": "Beer"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        -3.639392852783203,
+                        40.530179669832364
+                    ]
+                }
+            }
+        ]
+    };
+
+    // Agregar los puntos al mapa (opcional)
+    let vectorSource = new ol.source.Vector({
+        features: new ol.format.GeoJSON().readFeatures(myJSON, {
+            featureProjection: 'EPSG:25830', // Usar la misma proyección
+        }),
+    });
+
+    let vectorLayer = new ol.layer.Vector({
+        source: vectorSource
+    });
+
+    viewer.addLayer(vectorLayer);
+
+    // Ajustar el mapa al alcance de los puntos (si los puntos se usan)
+    let layerExtent = vectorLayer.getSource().getExtent();
+    viewer.getView().fit(layerExtent);
+
+    setTimeout(function () {
+        setInterval(() => {
+            if (vectorLayer.getVisible()) {
+                vectorLayer.setVisible(false);
+            } else {
+                vectorLayer.setVisible(true);
+            }
+        }, 1000);
+    }, 100);
+
+    // Código para eliminar el layer después de tres segundos (opcional)
+    // setTimeout(() => {
+    //     viewer.removeLayer(vectorLayer);
+    // }, 3000);
+};
+
+// Función llamada cuando cambian los datos (por si se usan)
+vm.drawLiveComponent = function (newData, oldData) {};
+
+// Función llamada cuando el elemento cambia de tamaño
+vm.resizeEvent = function () {};
+
+// Función llamada cuando el componente es destruido
+vm.destroyLiveComponent = function () {};
+
+// Función llamada cuando se recibe un valor de vm.sendValue(idGadgetTarget,data)
+vm.receiveValue = function (data) {};
